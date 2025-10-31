@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import TeamStandings from "./components/TeamStandings";
 import ScoreEntry from "./components/ScoreEntry";
+import LiveLeaderboard from "./components/LiveLeaderboard";
+import MatchEntry from "./components/MatchEntry";
 
 const TABS = [
   { id: "score", label: "Score Entry" },
@@ -51,16 +53,7 @@ export default function App() {
           {active === "standings" && <TeamStandings />}
           {active === "score" && <ScoreEntry />}
 
-          {active === "live" && (
-            <div className="card">
-              <h2 className="text-xl font-semibold text-[#343A40]">
-                Live Leaderboard (placeholder)
-              </h2>
-              <p className="text-sm text-gray-600 mt-2">
-                Real-time match cards and hole-by-hole details will show here.
-              </p>
-            </div>
-          )}
+          {active === "live" && <LiveLeaderboard />}
 
           {active === "players" && (
             <div className="card">
@@ -70,13 +63,7 @@ export default function App() {
             </div>
           )}
 
-          {active === "schedule" && (
-            <div className="card">
-              <h2 className="text-xl font-semibold text-[#343A40]">
-                Schedule / Results (placeholder)
-              </h2>
-            </div>
-          )}
+          {active === "schedule" && <MatchEntry />}
         </section>
       </main>
     </div>

@@ -56,6 +56,7 @@ const MOCK_PLAYERS = Array.from({ length: 40 }).map((_, i) => ({
 }));
 
 const MOCK_ROUNDS = [];
+const MOCK_MATCHES = [];
 
 export async function getTeams() {
   if (isFirebaseReady && db) {
@@ -144,47 +145,110 @@ export async function getPlayerHandicap9(playerId) {
   }
 }
 
+export async function getMatches() {
+  if (isFirebaseReady && db) {
+    try {
+      const col = collection(db, "matches");
+      const q = query(col, orderBy("date", "desc"));
+      const snap = await firestoreGetDocs(q);
+      return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.error("Error fetching matches from Firestore", e);
+      return MOCK_MATCHES;
+    }
+  }
+  return MOCK_MATCHES.slice().sort(
+    (a, b) => new Date(b.date) - new Date(a.date)
+  );
+}
+
+export async function saveMatch(match) {
+  if (isFirebaseReady && db) {
+    try {
+      const col = collection(db, "matches");
+      const docRef = await addDoc(col, match);
+      return { id: docRef.id, ...match };
+    } catch (e) {
+      console.error("Error saving match to Firestore", e);
+    }
+  }
+  const saved = { id: `m-${MOCK_MATCHES.length + 1}`, ...match };
+  MOCK_MATCHES.push(saved);
+  return saved;
+}
+
 export function subscribeToRounds(callback, options = {}) {
   if (isFirebaseReady && db) {
-    const col = collection(db, "rounds")
-    const q = query(col, orderBy("date", "desc"), ...(options.limit ? [limit(options.limit)] : []))
+    const col = collection(db, "rounds");
+    const q = query(
+      col,
+      orderBy("date", "desc"),
+      ...(options.limit ? [limit(options.limit)] : [])
+    );
     return onSnapshot(
       q,
       (snap) => {
-        const rounds = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-        callback(rounds)
+        const rounds = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        callback(rounds);
       },
       (err) => console.error("Rounds snapshot error", err)
-    )
+    );
   }
-  const t = setTimeout(() => callback(MOCK_ROUNDS.slice().sort((a, b) => new Date(b.date) - new Date(a.date))), 50)
-  return () => clearTimeout(t)
+  const t = setTimeout(
+    () =>
+      callback(
+        MOCK_ROUNDS.slice().sort((a, b) => new Date(b.date) - new Date(a.date))
+      ),
+    50
+  );
+  return () => clearTimeout(t);
 }
 
 export function subscribeToPlayers(callback) {
   if (isFirebaseReady && db) {
-    const col = collection(db, "players")
+    const col = collection(db, "players");
     return onSnapshot(
       col,
       (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
       (err) => console.error("Players snapshot error", err)
-    )
+    );
   }
-  const t = setTimeout(() => callback(MOCK_PLAYERS), 10)
-  return () => clearTimeout(t)
+  const t = setTimeout(() => callback(MOCK_PLAYERS), 10);
+  return () => clearTimeout(t);
 }
 
 export function subscribeToTeams(callback) {
   if (isFirebaseReady && db) {
-    const col = collection(db, "teams")
+    const col = collection(db, "teams");
     return onSnapshot(
       col,
       (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
       (err) => console.error("Teams snapshot error", err)
-    )
+    );
   }
-  const t = setTimeout(() => callback(MOCK_TEAMS), 10)
-  return () => clearTimeout(t)
+  const t = setTimeout(() => callback(MOCK_TEAMS), 10);
+  return () => clearTimeout(t);
+}
+
+export function subscribeToMatches(callback, options = {}) {
+  if (isFirebaseReady && db) {
+    const col = collection(db, "matches");
+    const q = query(
+      col,
+      orderBy("date", "desc"),
+      ...(options.limit ? [limit(options.limit)] : [])
+    );
+    return onSnapshot(
+      q,
+      (snap) => {
+        const matches = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        callback(matches);
+      },
+      (err) => console.error("Matches snapshot error", err)
+    );
+  }
+  const t = setTimeout(() => callback(MOCK_MATCHES), 50);
+  return () => clearTimeout(t);
 }
 
 export default {
@@ -193,4 +257,7 @@ export default {
   saveRound,
   getPlayerRounds,
   getPlayerHandicap9,
+  getMatches,
+  saveMatch,
+  subscribeToMatches,
 };
